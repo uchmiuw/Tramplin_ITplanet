@@ -942,13 +942,12 @@ window.viewItemDetails = function(itemId) {
     window.location.href = `item-detail.html?id=${itemId}`;
 };
 
+// Замените функцию applyFilters на эту версию (находится примерно в строке 700-750)
+
 window.applyFilters = function() {
     const search = document.getElementById("searchInput")?.value.toLowerCase() || "";
     const salary = document.getElementById("salaryFilter")?.value || "";
     const format = document.getElementById("formatFilter")?.value || "";
-    const techTagFilter = document.getElementById("techTagFilter")?.value || "";
-    const levelTagFilter = document.getElementById("levelTagFilter")?.value || "";
-    const hoursTagFilter = document.getElementById("hoursTagFilter")?.value || "";
     const sortType = document.getElementById("sortFilter")?.value || "newest";
 
     let currentData = [];
@@ -975,25 +974,6 @@ window.applyFilters = function() {
             if (format === "remote") ok = ok && itemFormat.includes("Удалён");
             if (format === "office") ok = ok && itemFormat.includes("Офис");
             if (format === "hybrid") ok = ok && itemFormat.includes("Гибрид");
-        }
-
-        if (techTagFilter || levelTagFilter || hoursTagFilter) {
-            const { techTags, levels, hours } = splitOpportunityTags(item);
-
-            if (techTagFilter) {
-                const selectedNorm = normalizeTagForCompare(techTagFilter);
-                ok = ok && techTags.some(t => normalizeTagForCompare(t) === selectedNorm);
-            }
-
-            if (levelTagFilter) {
-                const selectedNorm = normalizeTagForCompare(levelTagFilter);
-                ok = ok && levels.some(l => normalizeTagForCompare(l) === selectedNorm);
-            }
-
-            if (hoursTagFilter) {
-                const selectedNorm = normalizeTagForCompare(hoursTagFilter);
-                ok = ok && hours.some(h => normalizeTagForCompare(h) === selectedNorm);
-            }
         }
         
         return ok;

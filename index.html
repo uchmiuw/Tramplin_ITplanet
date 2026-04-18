@@ -89,22 +89,6 @@
       min-width: 130px;
     }
     
-    .tag-filters {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    
-    .tag-filters select {
-      padding: 10px 12px;
-      border: 1px solid #dee2e6;
-      border-radius: 10px;
-      font-size: 14px;
-      background: white;
-      cursor: pointer;
-      min-width: 140px;
-    }
-    
     .search-btn {
       background: #1f6aa5;
       color: white;
@@ -133,14 +117,6 @@
       .filter-group {
         justify-content: space-between;
       }
-      
-      .tag-filters {
-        width: 100%;
-      }
-      
-      .tag-filters select {
-        flex: 1;
-      }
     }
     
     @media (max-width: 768px) {
@@ -149,14 +125,6 @@
       }
       
       .filter-group select {
-        width: 100%;
-      }
-      
-      .tag-filters {
-        flex-direction: column;
-      }
-      
-      .tag-filters select {
         width: 100%;
       }
       
@@ -176,7 +144,7 @@
   </div>
 </header>
 
-<!-- Новая структура фильтров в одну строку -->
+<!-- Фильтры -->
 <div class="filters-row">
   <div class="search-group">
     <input type="text" id="searchInput" placeholder="Поиск по названию, описанию или городу">
@@ -200,18 +168,6 @@
     <select id="sortFilter">
       <option value="newest">Сначала новые</option>
       <option value="oldest">Сначала старые</option>
-    </select>
-  </div>
-  
-  <div class="tag-filters">
-    <select id="techTagFilter">
-      <option value="">Любые навыки</option>
-    </select>
-    <select id="levelTagFilter">
-      <option value="">Любой уровень</option>
-    </select>
-    <select id="employmentTagFilter">
-      <option value="">Часы работы</option>
     </select>
   </div>
   
