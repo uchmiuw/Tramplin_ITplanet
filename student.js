@@ -455,7 +455,6 @@ function updateSidebarRequests() {
   });
 }
 
-// ========== ИСПРАВЛЕННАЯ ФУНКЦИЯ ДОБАВЛЕНИЯ В ДРУЗЬЯ ==========
 window.addContact = async function(contactId) {
   console.log(`[DEBUG] Попытка добавить в друзья: ${contactId}`);
   
@@ -629,6 +628,7 @@ window.removeContact = async function(contactId) {
   } catch (error) {
     console.error("Ошибка удаления контакта:", error);
     
+    // Если ошибка прав доступа - пробуем удалить только свой контакт
     if (error.code === 'permission-denied' || error.message?.includes('permission')) {
       console.log("[DEBUG] Пробуем удалить только свой контакт...");
       try {
@@ -784,6 +784,7 @@ if (searchInput) {
   });
 }
 
+
 async function searchStudents(searchText) {
   if (!searchText || searchText.length < 2) {
     document.getElementById("searchResults").innerHTML = "";
@@ -808,6 +809,7 @@ async function searchStudents(searchText) {
       const user = docSnap.data();
       const userId = docSnap.id;
       
+      // Только студенты, не сам пользователь, и профиль видимый
       if (user.role !== "student") continue;
       if (userId === currentUser?.uid) continue;
       if (user.profile_visible === false) continue;
@@ -1222,7 +1224,6 @@ style.textContent = `
   }
 `;
 document.head.appendChild(style);
-// Экспорт функций в глобальную область
 window.loadSidebarContacts = loadSidebarContacts;
 window.loadSidebarRecommendations = loadSidebarRecommendations;
 window.loadContacts = loadContacts;
