@@ -56,7 +56,7 @@ async function loadProfile() {
       resumePreview.innerHTML = `<a href="${currentUserData.resumeUrl}" target="_blank" style="color: #1f6aa5;">Ссылка на резюме</a>`;
     } else if (currentUserData.resumeFileName) {
       resumePreview.style.display = "block";
-      resumePreview.innerHTML = `<span style="color: #1f6aa5;">Файл: ${currentUserData.resumeFileName}</span>`;
+      resumePreview.innerHTML = `<span style="color: #1f6aa5;">Файл: ${escapeHtml(currentUserData.resumeFileName)}</span>`;
     } else {
       resumePreview.style.display = "none";
       resumePreview.innerHTML = '';
@@ -70,7 +70,7 @@ async function loadProfile() {
       portfolioPreview.innerHTML = `<a href="${currentUserData.portfolioUrl}" target="_blank" style="color: #1f6aa5;">Ссылка на портфолио</a>`;
     } else if (currentUserData.portfolioFileName) {
       portfolioPreview.style.display = "block";
-      portfolioPreview.innerHTML = `<span style="color: #1f6aa5;">Файл: ${currentUserData.portfolioFileName}</span>`;
+      portfolioPreview.innerHTML = `<span style="color: #1f6aa5;">Файл: ${escapeHtml(currentUserData.portfolioFileName)}</span>`;
     } else {
       portfolioPreview.style.display = "none";
       portfolioPreview.innerHTML = '';
@@ -179,7 +179,7 @@ window.saveProfile = async function() {
       resumePreview.innerHTML = `<a href="${profileData.resumeUrl}" target="_blank" style="color: #1f6aa5;">Ссылка на резюме</a>`;
     } else if (profileData.resumeFileName) {
       resumePreview.style.display = "block";
-      resumePreview.innerHTML = `<span style="color: #1f6aa5;">Файл: ${profileData.resumeFileName}</span>`;
+      resumePreview.innerHTML = `<span style="color: #1f6aa5;">Файл: ${escapeHtml(profileData.resumeFileName)}</span>`;
     } else {
       resumePreview.style.display = "none";
       resumePreview.innerHTML = '';
@@ -193,7 +193,7 @@ window.saveProfile = async function() {
       portfolioPreview.innerHTML = `<a href="${profileData.portfolioUrl}" target="_blank" style="color: #1f6aa5;">Ссылка на портфолио</a>`;
     } else if (profileData.portfolioFileName) {
       portfolioPreview.style.display = "block";
-      portfolioPreview.innerHTML = `<span style="color: #1f6aa5;">Файл: ${profileData.portfolioFileName}</span>`;
+      portfolioPreview.innerHTML = `<span style="color: #1f6aa5;">Файл: ${escapeHtml(profileData.portfolioFileName)}</span>`;
     } else {
       portfolioPreview.style.display = "none";
       portfolioPreview.innerHTML = '';
@@ -312,18 +312,18 @@ async function loadApplications() {
     div.className = "card";
 
     div.innerHTML = `
-      <h3>${jobData.title || "Вакансия"}</h3>
-      <p><strong>Компания: ${companyName}</strong></p>
+      <h3>${escapeHtml(jobData.title || "Вакансия")}</h3>
+      <p><strong>Компания: ${escapeHtml(companyName)}</strong></p>
       <p>Зарплата: ${jobData.salary ? jobData.salary.toLocaleString() : "—"} ₽</p>
-      <p>Формат работы: ${jobData.format || "—"}</p>
-      ${jobData.work_hours ? `<p>Занятость: ${jobData.work_hours} ч/день</p>` : ""}
-      ${jobData.level ? `<p>Уровень: ${jobData.level}</p>` : ""}
-      <p>Адрес: ${addressText}</p>
+      <p>Формат работы: ${escapeHtml(jobData.format || "—")}</p>
+      ${jobData.work_hours ? `<p>Занятость: ${escapeHtml(String(jobData.work_hours))} ч/день</p>` : ""}
+      ${jobData.level ? `<p>Уровень: ${escapeHtml(jobData.level)}</p>` : ""}
+      <p>Адрес: ${escapeHtml(addressText)}</p>
       <p>Статус отклика: <span class="status-badge ${statusClass}">${statusText}</span></p>
       <p>Дата отклика: ${appliedDate}</p>
       <div style="display: flex; gap: 10px; margin-top: 10px;">
         <button onclick="viewJobDetails('${data.opportunity_id}')" style="background: #1f6aa5;">Просмотреть вакансию</button>
-        ${data.status === "pending" ? `<button onclick="withdrawApplication('${applicationId}', '${jobData.title}')" style="background: #dc3545;">Отозвать отклик</button>` : ""}
+        ${data.status === "pending" ? `<button onclick="withdrawApplication('${applicationId}', '${escapeHtml(jobData.title).replace(/'/g, "\\'")}')" style="background: #dc3545;">Отозвать отклик</button>` : ""}
       </div>
     `;
 
@@ -378,10 +378,10 @@ async function loadContacts() {
       div.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: start;">
           <div>
-            <h3 style="margin: 0 0 5px 0;">${contact.firstName} ${contact.lastName}</h3>
-            <p style="margin: 5px 0; color: #666; font-size: 13px;">Учебное заведение: ${contact.university || "Не указано"}</p>
-            <p style="margin: 5px 0; color: #666; font-size: 13px;">Специальность: ${contact.speciality || "Не указана"}</p>
-            ${contact.course ? `<p style="margin: 5px 0; color: #666; font-size: 13px;">Курс: ${contact.course}</p>` : ""}
+            <h3 style="margin: 0 0 5px 0;">${escapeHtml(contact.firstName)} ${escapeHtml(contact.lastName)}</h3>
+            <p style="margin: 5px 0; color: #666; font-size: 13px;">Учебное заведение: ${escapeHtml(contact.university || "Не указано")}</p>
+            <p style="margin: 5px 0; color: #666; font-size: 13px;">Специальность: ${escapeHtml(contact.speciality || "Не указана")}</p>
+            ${contact.course ? `<p style="margin: 5px 0; color: #666; font-size: 13px;">Курс: ${escapeHtml(contact.course)}</p>` : ""}
           </div>
           <button onclick="removeContact('${contact.contactId}')" style="background: #dc3545; padding: 6px 12px; font-size: 12px;">Удалить</button>
         </div>
@@ -389,7 +389,7 @@ async function loadContacts() {
           <div style="margin-top: 10px;">
             <strong style="font-size: 12px;">Общие навыки:</strong>
             <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;">
-              ${commonSkills.map(skill => `<span class="skill-tag-small">${skill}</span>`).join('')}
+              ${commonSkills.map(skill => `<span class="skill-tag-small">${escapeHtml(skill)}</span>`).join('')}
             </div>
           </div>
         ` : ""}
@@ -444,7 +444,7 @@ function updateSidebarRequests() {
       <div class="contact-info">
         <h4>${escapeHtml(request.from_user_name)}</h4>
         <p>Хочет добавить вас в друзья</p>
-        <p style="font-size: 11px; color: #999;">${new Date(request.created_at.seconds * 1000).toLocaleDateString('ru-RU')}</p>
+        <p style="font-size: 11px; color: #999;">${request.created_at ? new Date(request.created_at.seconds * 1000).toLocaleDateString('ru-RU') : "—"}</p>
       </div>
       <div style="display: flex; gap: 8px; margin-top: 10px;">
         <button onclick="acceptFriendRequest('${request.id}', '${request.from_user_id}')" style="background: #28a745;">Принять</button>
@@ -455,41 +455,54 @@ function updateSidebarRequests() {
   });
 }
 
+// ========== ИСПРАВЛЕННАЯ ФУНКЦИЯ ДОБАВЛЕНИЯ В ДРУЗЬЯ ==========
 window.addContact = async function(contactId) {
-  const existing = await getDocs(
-    query(collection(db, "contacts"), 
-      where("userId", "==", currentUser.uid), 
-      where("contactId", "==", contactId)
-    )
-  );
+  console.log(`[DEBUG] Попытка добавить в друзья: ${contactId}`);
   
-  if (!existing.empty) {
-    showToast("Этот пользователь уже в ваших контактах", "info");
+  if (contactId === currentUser?.uid) {
+    showToast("Вы не можете добавить себя в друзья", "info");
     return;
   }
-  
-  const existingRequest = await getDocs(
-    query(collection(db, "friend_requests"), 
-      where("from_user_id", "==", currentUser.uid), 
-      where("to_user_id", "==", contactId)
-    )
-  );
-  
-  if (!existingRequest.empty) {
-    showToast("Заявка уже отправлена", "info");
-    return;
-  }
-  
+
   try {
+    const existing = await getDocs(
+      query(collection(db, "contacts"), 
+        where("userId", "==", currentUser.uid), 
+        where("contactId", "==", contactId)
+      )
+    );
+    
+    if (!existing.empty) {
+      showToast("Этот пользователь уже в ваших контактах", "info");
+      updateSearchResultButton(contactId, true);
+      return;
+    }
+    
+    const existingRequest = await getDocs(
+      query(collection(db, "friend_requests"), 
+        where("from_user_id", "==", currentUser.uid), 
+        where("to_user_id", "==", contactId)
+      )
+    );
+    
+    if (!existingRequest.empty) {
+      showToast("Заявка уже отправлена", "info");
+      updateSearchResultButton(contactId, false, true);
+      return;
+    }
+    
     await addDoc(collection(db, "friend_requests"), {
       from_user_id: currentUser.uid,
       to_user_id: contactId,
-      from_user_name: `${currentUserData.firstName} ${currentUserData.lastName}`,
+      from_user_name: `${currentUserData.firstName || ""} ${currentUserData.lastName || ""}`.trim() || "Пользователь",
       created_at: new Date(),
       status: "pending"
     });
     
     showToast("Заявка в друзья отправлена", "success");
+    
+    updateSearchResultButton(contactId, false, true);
+    await loadSuggestedStudents();
     
   } catch (error) {
     console.error("Ошибка отправки заявки:", error);
@@ -497,6 +510,27 @@ window.addContact = async function(contactId) {
   }
 };
 
+function updateSearchResultButton(contactId, isContact = false, requestSent = false) {
+  const buttons = document.querySelectorAll(`#searchResults button[onclick*="addContact('${contactId}')"]`);
+  
+  buttons.forEach(btn => {
+    if (isContact) {
+      btn.textContent = "Уже в друзьях";
+      btn.disabled = true;
+      btn.style.background = "#6c757d";
+    } else if (requestSent) {
+      btn.textContent = "Заявка отправлена";
+      btn.disabled = true;
+      btn.style.background = "#6c757d";
+    } else {
+      btn.textContent = "Добавить в друзья";
+      btn.disabled = false;
+      btn.style.background = "#28a745";
+    }
+  });
+}
+
+// ========== ИСПРАВЛЕННАЯ ФУНКЦИЯ ПРИНЯТИЯ ЗАЯВКИ ==========
 window.acceptFriendRequest = async function(requestId, fromUserId) {
   try {
     await addDoc(collection(db, "contacts"), {
@@ -524,12 +558,15 @@ window.acceptFriendRequest = async function(requestId, fromUserId) {
       searchStudents(searchInput.value);
     }
     
+    await loadSidebarContacts();
+    
   } catch (error) {
     console.error("Ошибка принятия заявки:", error);
     showToast("Ошибка при принятии заявки", "error");
   }
 };
 
+// ========== ИСПРАВЛЕННАЯ ФУНКЦИЯ ОТКЛОНЕНИЯ ЗАЯВКИ ==========
 window.declineFriendRequest = async function(requestId) {
   try {
     await deleteDoc(doc(db, "friend_requests", requestId));
@@ -541,38 +578,57 @@ window.declineFriendRequest = async function(requestId) {
   }
 };
 
+// ========== ИСПРАВЛЕННАЯ ФУНКЦИЯ УДАЛЕНИЯ ИЗ ДРУЗЕЙ ==========
 window.removeContact = async function(contactId) {
   if (!confirm("Удалить пользователя из друзей?")) return;
   
   try {
+    // Получаем имя контакта для сообщения
     const contactUserDoc = await getDoc(doc(db, "users", contactId));
     const contactName = contactUserDoc.exists() 
       ? `${contactUserDoc.data().firstName} ${contactUserDoc.data().lastName}` 
       : "пользователя";
     
-    const q1 = query(collection(db, "contacts"), 
+    console.log(`[DEBUG] Удаление контакта: ${contactId}, текущий пользователь: ${currentUser.uid}`);
+    
+    // Удаляем контакт у текущего пользователя
+    const q1 = query(
+      collection(db, "contacts"), 
       where("userId", "==", currentUser.uid), 
       where("contactId", "==", contactId)
     );
     const snap1 = await getDocs(q1);
     
-    const q2 = query(collection(db, "contacts"), 
+    // Удаляем контакт у другого пользователя
+    const q2 = query(
+      collection(db, "contacts"), 
       where("userId", "==", contactId), 
       where("contactId", "==", currentUser.uid)
     );
     const snap2 = await getDocs(q2);
     
     const deletePromises = [];
-    snap1.forEach(doc => deletePromises.push(deleteDoc(doc.ref)));
-    snap2.forEach(doc => deletePromises.push(deleteDoc(doc.ref)));
+    snap1.forEach(docSnap => {
+      console.log(`[DEBUG] Удаление документа 1: ${docSnap.id}`);
+      deletePromises.push(deleteDoc(docSnap.ref));
+    });
+    snap2.forEach(docSnap => {
+      console.log(`[DEBUG] Удаление документа 2: ${docSnap.id}`);
+      deletePromises.push(deleteDoc(docSnap.ref));
+    });
+    
+    console.log(`[DEBUG] Всего документов к удалению: ${deletePromises.length}`);
+    
     await Promise.all(deletePromises);
     
-    showToast(`Контакт "${contactName}" удален из друзей`, "info");
+    showToast(`Контакт "${contactName}" удален из друзей`, "success");
     
+    // Обновляем UI
     await loadContacts();
     await loadSuggestedStudents();
     await loadSidebarContacts();
     
+    // Обновляем поиск если открыт
     const searchInput = document.getElementById("searchStudent");
     if (searchInput && searchInput.value) {
       searchStudents(searchInput.value);
@@ -580,9 +636,42 @@ window.removeContact = async function(contactId) {
     
   } catch (error) {
     console.error("Ошибка удаления контакта:", error);
-    showToast("Ошибка при удалении из друзей", "error");
+    
+    // Если ошибка прав доступа - пробуем удалить только свой контакт
+    if (error.code === 'permission-denied' || error.message?.includes('permission')) {
+      console.log("[DEBUG] Пробуем удалить только свой контакт...");
+      try {
+        const q1 = query(
+          collection(db, "contacts"), 
+          where("userId", "==", currentUser.uid), 
+          where("contactId", "==", contactId)
+        );
+        const snap1 = await getDocs(q1);
+        
+        const deletePromises = [];
+        snap1.forEach(docSnap => deletePromises.push(deleteDoc(docSnap.ref)));
+        await Promise.all(deletePromises);
+        
+        showToast(`Контакт удален из вашего списка друзей`, "success");
+        
+        await loadContacts();
+        await loadSuggestedStudents();
+        await loadSidebarContacts();
+        
+        const searchInput = document.getElementById("searchStudent");
+        if (searchInput && searchInput.value) {
+          searchStudents(searchInput.value);
+        }
+      } catch (e) {
+        console.error("Повторная ошибка:", e);
+        showToast("Не удалось удалить контакт", "error");
+      }
+    } else {
+      showToast("Ошибка при удалении из друзей", "error");
+    }
   }
 };
+
 
 function getCommonSkills(userSkills, contactSkills) {
   if (!userSkills || !contactSkills) return [];
@@ -646,14 +735,14 @@ async function loadSuggestedStudents() {
     div.className = "contact-card";
     div.style.marginBottom = "12px";
 
-    const skillsHtml = c.commonSkills.map(s => `<span class="skill-tag-small">${s}</span>`).join("");
+    const skillsHtml = c.commonSkills.map(s => `<span class="skill-tag-small">${escapeHtml(s)}</span>`).join("");
 
     div.innerHTML = `
       <div style="display:flex; justify-content: space-between; align-items:flex-start; gap:12px;">
         <div>
-          <h3 style="margin: 0 0 6px 0;">${c.firstName} ${c.lastName}</h3>
-          <p style="margin: 5px 0; color: #666; font-size: 13px;">Учебное заведение: ${c.university || "Не указано"}</p>
-          <p style="margin: 5px 0; color: #666; font-size: 13px;">Специальность: ${c.speciality || "Не указана"}</p>
+          <h3 style="margin: 0 0 6px 0;">${escapeHtml(c.firstName)} ${escapeHtml(c.lastName)}</h3>
+          <p style="margin: 5px 0; color: #666; font-size: 13px;">Учебное заведение: ${escapeHtml(c.university || "Не указано")}</p>
+          <p style="margin: 5px 0; color: #666; font-size: 13px;">Специальность: ${escapeHtml(c.speciality || "Не указана")}</p>
           <div style="margin-top: 10px;">
             <strong style="font-size: 12px;">Совпадения:</strong>
             <div style="display:flex; flex-wrap:wrap; gap:5px; margin-top: 5px;">${skillsHtml}</div>
@@ -726,10 +815,33 @@ async function searchStudents(query) {
       
       if (fullName.includes(queryLower) || university.includes(queryLower) || skills.includes(queryLower)) {
         const isContact = contacts.some(c => c.contactId === docSnap.id);
-        results.push({ id: docSnap.id, ...user, isContact });
+        
+        // Проверяем, есть ли уже отправленная заявка
+        const existingRequest = friendRequests.some(r => r.from_user_id === docSnap.id) || false;
+        
+        results.push({ 
+          id: docSnap.id, 
+          ...user, 
+          isContact,
+          requestSent: false // По умолчанию
+        });
       }
     }
   }
+  
+  // Проверяем отправленные заявки для этих результатов
+  const sentRequestsSnap = await getDocs(
+    query(collection(db, "friend_requests"), where("from_user_id", "==", currentUser.uid))
+  );
+  
+  const sentRequestIds = new Set();
+  sentRequestsSnap.forEach(doc => {
+    sentRequestIds.add(doc.data().to_user_id);
+  });
+  
+  results.forEach(r => {
+    r.requestSent = sentRequestIds.has(r.id);
+  });
   
   const container = document.getElementById("searchResults");
   
@@ -744,23 +856,30 @@ async function searchStudents(query) {
   results.forEach(user => {
     const div = document.createElement("div");
     div.className = "contact-card";
+    
+    let buttonHtml = "";
+    if (user.isContact) {
+      buttonHtml = `<button disabled style="background: #6c757d;">Уже в друзьях</button>`;
+    } else if (user.requestSent) {
+      buttonHtml = `<button disabled style="background: #6c757d;">Заявка отправлена</button>`;
+    } else {
+      buttonHtml = `<button onclick="addContact('${user.id}')" style="background: #28a745;">Добавить в друзья</button>`;
+    }
+    
     div.innerHTML = `
-      <h3 style="margin: 0 0 5px 0;">${user.firstName} ${user.lastName}</h3>
-      <p style="margin: 5px 0; color: #666; font-size: 13px;">Учебное заведение: ${user.university || "Не указано"}</p>
-      <p style="margin: 5px 0; color: #666; font-size: 13px;">Специальность: ${user.speciality || "Не указана"}</p>
+      <h3 style="margin: 0 0 5px 0;">${escapeHtml(user.firstName)} ${escapeHtml(user.lastName)}</h3>
+      <p style="margin: 5px 0; color: #666; font-size: 13px;">Учебное заведение: ${escapeHtml(user.university || "Не указано")}</p>
+      <p style="margin: 5px 0; color: #666; font-size: 13px;">Специальность: ${escapeHtml(user.speciality || "Не указана")}</p>
       ${user.skills && user.skills.length > 0 ? `
         <div style="margin-top: 10px;">
           <strong style="font-size: 12px;">Навыки:</strong>
           <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;">
-            ${user.skills.slice(0, 5).map(skill => `<span class="skill-tag-small">${skill}</span>`).join('')}
+            ${user.skills.slice(0, 5).map(skill => `<span class="skill-tag-small">${escapeHtml(skill)}</span>`).join('')}
           </div>
         </div>
       ` : ""}
       <div style="margin-top: 10px;">
-        ${!user.isContact ? 
-          `<button onclick="addContact('${user.id}')" style="background: #28a745;">Добавить в друзья</button>` :
-          `<button disabled style="background: #6c757d;">Уже в друзьях</button>`
-        }
+        ${buttonHtml}
       </div>
     `;
     resultsContainer.appendChild(div);
@@ -817,37 +936,37 @@ window.viewStudentProfile = async function(studentId) {
   modal.innerHTML = `
     <div class="profile-modal-content">
       <div class="profile-modal-header">
-        <h2>${student.firstName} ${student.lastName}</h2>
+        <h2>${escapeHtml(student.firstName)} ${escapeHtml(student.lastName)}</h2>
         <button class="profile-modal-close" onclick="closeStudentProfileModal()">&times;</button>
       </div>
       <div class="profile-modal-body">
         <div class="info-row">
           <div class="info-label">Телефон</div>
-          <div class="info-value">${student.phone || "Не указан"}</div>
+          <div class="info-value">${escapeHtml(student.phone || "Не указан")}</div>
         </div>
         <div class="info-row">
           <div class="info-label">Учебное заведение</div>
-          <div class="info-value">${student.university || "Не указано"}</div>
+          <div class="info-value">${escapeHtml(student.university || "Не указано")}</div>
         </div>
         <div class="info-row">
           <div class="info-label">Курс</div>
-          <div class="info-value">${student.course || "Не указан"}</div>
+          <div class="info-value">${escapeHtml(student.course || "Не указан")}</div>
         </div>
         <div class="info-row">
           <div class="info-label">Специальность</div>
-          <div class="info-value">${student.speciality || "Не указана"}</div>
+          <div class="info-value">${escapeHtml(student.speciality || "Не указана")}</div>
         </div>
         <div class="info-row">
           <div class="info-label">Навыки</div>
           <div class="info-value">
             <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px;">
-              ${(student.skills || []).map(skill => `<span class="skill-tag-small">${skill}</span>`).join('') || "Не указаны"}
+              ${(student.skills || []).map(skill => `<span class="skill-tag-small">${escapeHtml(skill)}</span>`).join('') || "Не указаны"}
             </div>
           </div>
         </div>
         <div class="info-row">
           <div class="info-label">Портфолио</div>
-          <div class="info-value">${student.portfolio || "Не указано"}</div>
+          <div class="info-value">${escapeHtml(student.portfolio || "Не указано")}</div>
         </div>
         ${student.resumeUrl ? `
           <div class="info-row">
@@ -862,7 +981,7 @@ window.viewStudentProfile = async function(studentId) {
             <div class="info-value">
               ${applications.map(app => `
                 <div style="background: #f8f9fa; padding: 8px; margin-top: 5px; border-radius: 8px;">
-                  <strong>${app.title}</strong><br>
+                  <strong>${escapeHtml(app.title)}</strong><br>
                   <span class="status-badge ${app.status === 'pending' ? 'status-pending' : app.status === 'accepted' ? 'status-accepted' : 'status-rejected'}">
                     ${app.status === "pending" ? "На рассмотрении" : app.status === "accepted" ? "Принят" : "Отклонен"}
                   </span>
@@ -897,7 +1016,9 @@ window.recommendJob = async function(studentId) {
   const recommendedJobs = [];
   
   for (const jobDoc of jobsSnap.docs) {
-    recommendedJobs.push({ id: jobDoc.id, ...jobDoc.data() });
+    const job = jobDoc.data();
+    if (job.moderation_status !== "approved" && job.moderation_status !== undefined) continue;
+    recommendedJobs.push({ id: jobDoc.id, ...job });
   }
   
   if (recommendedJobs.length === 0) {
@@ -926,9 +1047,9 @@ window.recommendJob = async function(studentId) {
       
       ${recommendedJobs.map(job => `
         <div class="card" style="margin-bottom: 10px; cursor: pointer;" onclick="sendRecommendation('${studentId}', '${job.id}')">
-          <h3>${job.title}</h3>
+          <h3>${escapeHtml(job.title)}</h3>
           <p>Зарплата: ${job.salary ? job.salary.toLocaleString() : "—"} ₽</p>
-          <p>Формат работы: ${job.format || "—"}</p>
+          <p>Формат работы: ${escapeHtml(job.format || "—")}</p>
         </div>
       `).join('')}
     </div>
@@ -963,7 +1084,7 @@ window.sendRecommendation = async function(studentId, jobId) {
 };
 
 window.viewJobDetails = function(jobId) {
-  window.location.href = `item-detail.html?id=${jobId}`;  // было job-detail.html
+  window.location.href = `item-detail.html?id=${jobId}`;
 };
 
 window.logout = async function() {
@@ -1009,7 +1130,6 @@ async function loadSidebarContacts() {
   const container = document.getElementById("sidebarContacts");
   if (!container) return;
   
-  console.log("Загрузка контактов в шторку...");
   const contactsSnap = await getDocs(
     query(collection(db, "contacts"), where("userId", "==", currentUser.uid))
   );
@@ -1031,8 +1151,8 @@ async function loadSidebarContacts() {
       div.className = "sidebar-card contact-card-small";
       div.innerHTML = `
         <div class="contact-info">
-          <h4>${contact.firstName} ${contact.lastName}</h4>
-          <p>Учебное заведение: ${contact.university || "—"}</p>
+          <h4>${escapeHtml(contact.firstName)} ${escapeHtml(contact.lastName)}</h4>
+          <p>Учебное заведение: ${escapeHtml(contact.university || "—")}</p>
         </div>
         <div>
           <button onclick="viewStudentProfile('${contactData.contactId}'); toggleSidebar();" style="padding: 6px 10px;">Просмотр</button>
@@ -1042,22 +1162,18 @@ async function loadSidebarContacts() {
       container.appendChild(div);
     }
   }
-  console.log("Контакты в шторке загружены");
 }
 
 async function loadSidebarRecommendations() {
   const container = document.getElementById("sidebarRecommendations");
   if (!container) return;
   
-  console.log("Загрузка рекомендаций в шторку...");
   const recSnap = await getDocs(
     query(collection(db, "recommendations"), 
       where("to_user_id", "==", currentUser.uid),
       where("status", "!=", "read")
     )
   );
-  
-  console.log("Найдено рекомендаций:", recSnap.size);
   
   if (recSnap.empty) {
     container.innerHTML = '<div class="empty-sidebar">Нет новых рекомендаций</div>';
@@ -1074,8 +1190,8 @@ async function loadSidebarRecommendations() {
     const div = document.createElement("div");
     div.className = "sidebar-card recommendation-card";
     div.innerHTML = `
-      <div><strong>${rec.job_title}</strong></div>
-      <div class="recommendation-sender">${senderName} рекомендует вам эту вакансию</div>
+      <div><strong>${escapeHtml(rec.job_title)}</strong></div>
+      <div class="recommendation-sender">${escapeHtml(senderName)} рекомендует вам эту вакансию</div>
       <div style="margin-top: 10px; display: flex; gap: 8px;">
         <button onclick="viewJobDetails('${rec.job_id}'); toggleSidebar();" style="padding: 6px 12px; background: #1f6aa5;">Посмотреть</button>
         <button onclick="markRecommendationRead('${recDoc.id}')" style="padding: 6px 12px; background: #28a745;">ОК</button>
@@ -1083,7 +1199,6 @@ async function loadSidebarRecommendations() {
     `;
     container.appendChild(div);
   }
-  console.log("Рекомендации в шторке загружены");
 }
 
 window.markRecommendationRead = async function(recId) {
@@ -1112,3 +1227,26 @@ style.textContent = `
   }
 `;
 document.head.appendChild(style);
+// Экспорт функций в глобальную область
+window.loadSidebarContacts = loadSidebarContacts;
+window.loadSidebarRecommendations = loadSidebarRecommendations;
+window.loadContacts = loadContacts;
+window.loadFriendRequests = loadFriendRequests;
+window.loadSuggestedStudents = loadSuggestedStudents;
+window.toggleSidebar = toggleSidebar;
+window.switchSidebarTab = switchSidebarTab;
+window.markRecommendationRead = markRecommendationRead;
+window.viewStudentProfile = viewStudentProfile;
+window.closeStudentProfileModal = closeStudentProfileModal;
+window.recommendJob = recommendJob;
+window.sendRecommendation = sendRecommendation;
+window.withdrawApplication = withdrawApplication;
+window.togglePrivacy = togglePrivacy;
+window.saveProfile = saveProfile;
+window.addContact = addContact;
+window.acceptFriendRequest = acceptFriendRequest;
+window.declineFriendRequest = declineFriendRequest;
+window.removeContact = removeContact;
+window.viewJobDetails = viewJobDetails;
+window.logout = logout;
+window.goHome = goHome;

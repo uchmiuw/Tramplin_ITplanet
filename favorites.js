@@ -201,7 +201,7 @@ function renderList(data) {
 }
 
 window.viewJobDetails = function(jobId) {
-    window.location.href = `item-detail.html?id=${jobId}`;  // было job-detail.html
+    window.location.href = `item-detail.html?id=${jobId}`;
 };
 
 async function loadFavorites() {
