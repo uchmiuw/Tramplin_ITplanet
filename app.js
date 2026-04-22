@@ -479,23 +479,39 @@ async function syncFavoritesWithFirebase() {
     try {
         const q = query(collection(db, "favorites"), where("user_id", "==", currentUser.uid));
         const snapshot = await getDocs(q);
-        const firebaseFavorites = snapshot.docs.map(doc => doc.data().job_id);
+        const firebaseFavorites = [];
+        const firebaseDocIds = {};
+        
+        snapshot.docs.forEach(doc => {
+            const jobId = doc.data().job_id;
+            firebaseFavorites.push(jobId);
+            firebaseDocIds[jobId] = doc.id;
+        });
         
         const localFavorites = JSON.parse(localStorage.getItem("favorites")) || [];
-        const merged = [...new Set([...firebaseFavorites, ...localFavorites])];
         
-        for (const jobId of merged) {
+        for (const jobId of firebaseFavorites) {
+            if (!localFavorites.includes(jobId)) {
+                const docId = firebaseDocIds[jobId];
+                if (docId) {
+                    await deleteDoc(doc(db, "favorites", docId));
+                    console.log(`Удалено из Firebase: ${jobId}`);
+                }
+            }
+        }
+        
+        for (const jobId of localFavorites) {
             if (!firebaseFavorites.includes(jobId)) {
                 await addDoc(collection(db, "favorites"), {
                     user_id: currentUser.uid,
                     job_id: jobId,
                     created_at: new Date()
                 });
+                console.log(`Добавлено в Firebase: ${jobId}`);
             }
         }
         
-        favorites = merged;
-        localStorage.setItem("favorites", JSON.stringify(favorites));
+        favorites = [...localFavorites];
         
         console.log("Избранное синхронизировано:", favorites.length);
         

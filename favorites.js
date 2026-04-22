@@ -3,7 +3,10 @@ import {
     collection, 
     getDocs, 
     doc,
-    getDoc
+    getDoc,
+    query,
+    where,
+    deleteDoc
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 import { 
     onAuthStateChanged,
@@ -119,12 +122,12 @@ function renderList(data) {
             <div class="favorite" onclick="removeFromFavorites(event, '${job.id}')">
                 ❤️
             </div>
-            <h3>${job.title || "Без названия"}</h3>
-            <p><strong>${job.company_name || "Компания"}</strong></p>
+            <h3>${escapeHtml(job.title || "Без названия")}</h3>
+            <p><strong>${escapeHtml(job.company_name || "Компания")}</strong></p>
             <p>Зарплата: ${job.salary ? job.salary.toLocaleString() : "—"} ₽</p>
-            <p>Формат работы: ${job.format || "—"}</p>
-            <p>Адрес: ${addressText}</p>
-            ${job.description ? `<p style="font-size: 12px; color: #666; margin-top: 8px;">${job.description.substring(0, 100)}${job.description.length > 100 ? "..." : ""}</p>` : ""}
+            <p>Формат работы: ${escapeHtml(job.format || "—")}</p>
+            <p>Адрес: ${escapeHtml(addressText)}</p>
+            ${job.description ? `<p style="font-size: 12px; color: #666; margin-top: 8px;">${escapeHtml(job.description.substring(0, 100))}${job.description.length > 100 ? "..." : ""}</p>` : ""}
             ${dateText}
             <div style="margin-top: 10px;">
                 <button onclick="viewJobDetails('${job.id}')" style="background: #1f6aa5; padding: 6px 12px; font-size: 12px;">Просмотреть вакансию</button>
@@ -135,14 +138,39 @@ function renderList(data) {
     });
 }
 
+function escapeHtml(text) {
+    if (!text) return "";
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 window.viewJobDetails = function(jobId) {
     window.location.href = `item-detail.html?id=${jobId}`;
 };
 
 async function loadFavorites() {
-    const favoritesIds = JSON.parse(localStorage.getItem("favorites")) || [];
+    // Загружаем избранное из localStorage
+    const localFavorites = JSON.parse(localStorage.getItem("favorites")) || [];
     
-    if (favoritesIds.length === 0) {
+    // Если пользователь авторизован, синхронизируем с Firestore
+    let favoriteIds = [...localFavorites];
+    
+    if (currentUser) {
+        try {
+            const q = query(collection(db, "favorites"), where("user_id", "==", currentUser.uid));
+            const snapshot = await getDocs(q);
+            const firebaseFavorites = snapshot.docs.map(doc => doc.data().job_id);
+            
+            favoriteIds = [...new Set([...localFavorites, ...firebaseFavorites])];
+            
+            localStorage.setItem("favorites", JSON.stringify(favoriteIds));
+        } catch (error) {
+            console.error("Ошибка загрузки избранного из Firebase:", error);
+        }
+    }
+    
+    if (favoriteIds.length === 0) {
         renderList([]);
         return;
     }
@@ -154,14 +182,20 @@ async function loadFavorites() {
         for (const docSnap of querySnapshot.docs) {
             const job = { id: docSnap.id, ...docSnap.data() };
             
-            if (favoritesIds.includes(job.id)) {
+            if (favoriteIds.includes(job.id)) {
                 if (job.company_id) {
                     try {
                         const companyDoc = await getDoc(doc(db, "companies", job.company_id));
                         if (companyDoc.exists()) {
                             job.company_name = companyDoc.data().name;
+                        } else {
+                            job.company_name = "Компания";
                         }
-                    } catch(e) {}
+                    } catch(e) {
+                        job.company_name = "Компания";
+                    }
+                } else {
+                    job.company_name = "Компания";
                 }
                 favoriteJobs.push(job);
             }
@@ -188,11 +222,30 @@ window.removeFromFavorites = async function(event, jobId) {
     favorites = favorites.filter(f => f !== jobId);
     localStorage.setItem("favorites", JSON.stringify(favorites));
     
-    favoriteJobs = favoriteJobs.filter(job => job.id !== jobId);
+    if (currentUser) {
+        try {
+            const q = query(
+                collection(db, "favorites"), 
+                where("user_id", "==", currentUser.uid),
+                where("job_id", "==", jobId)
+            );
+            const snapshot = await getDocs(q);
+            
+            const deletePromises = [];
+            snapshot.forEach(doc => {
+                deletePromises.push(deleteDoc(doc.ref));
+            });
+            await Promise.all(deletePromises);
+            
+            console.log(`Удалено из Firebase избранное: ${jobId}`);
+        } catch (error) {
+            console.error("Ошибка удаления из Firebase:", error);
+        }
+    }
     
+    favoriteJobs = favoriteJobs.filter(job => job.id !== jobId);
     renderList(favoriteJobs);
     
-    // Отправляем событие для синхронизации с другими вкладками
     window.dispatchEvent(new StorageEvent('storage', {
         key: 'favorites',
         newValue: JSON.stringify(favorites),
@@ -202,7 +255,6 @@ window.removeFromFavorites = async function(event, jobId) {
     alert("Вакансия удалена из избранного");
 };
 
-// Слушаем изменения в localStorage из других вкладок
 window.addEventListener('storage', function(e) {
     if (e.key === 'favorites') {
         loadFavorites();
