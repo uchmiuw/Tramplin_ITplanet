@@ -27,6 +27,10 @@ let isMapInitialized = false;
 let isJobsLoaded = false;
 let pendingJobs = null;
 
+// Кэш для компаний
+let companiesCache = new Map();
+let isLoadingCompanies = new Set();
+
 // ========= ТЕГИ / ФИЛЬТРЫ =========
 const LEVEL_TAGS = ["Junior", "Middle", "Senior"];
 const HOURS_TAGS = ["3-6 часов", "7-9 часов", "10-14 часов"];
@@ -86,9 +90,6 @@ function splitOpportunityTags(item) {
 }
 
 function isModerationApproved(item) {
-    // ВАЖНО: показываем все вакансии для теста
-    // В финальной версии раскомментировать строку ниже и закомментировать return true
-    // return !item?.moderation_status || item.moderation_status === "approved";
     return true;
 }
 
@@ -479,23 +480,39 @@ async function syncFavoritesWithFirebase() {
     try {
         const q = query(collection(db, "favorites"), where("user_id", "==", currentUser.uid));
         const snapshot = await getDocs(q);
-        const firebaseFavorites = snapshot.docs.map(doc => doc.data().job_id);
+        const firebaseFavorites = [];
+        const firebaseDocIds = {};
+        
+        snapshot.docs.forEach(doc => {
+            const jobId = doc.data().job_id;
+            firebaseFavorites.push(jobId);
+            firebaseDocIds[jobId] = doc.id;
+        });
         
         const localFavorites = JSON.parse(localStorage.getItem("favorites")) || [];
-        const merged = [...new Set([...firebaseFavorites, ...localFavorites])];
         
-        for (const jobId of merged) {
+        for (const jobId of firebaseFavorites) {
+            if (!localFavorites.includes(jobId)) {
+                const docId = firebaseDocIds[jobId];
+                if (docId) {
+                    await deleteDoc(doc(db, "favorites", docId));
+                    console.log(`Удалено из Firebase: ${jobId}`);
+                }
+            }
+        }
+        
+        for (const jobId of localFavorites) {
             if (!firebaseFavorites.includes(jobId)) {
                 await addDoc(collection(db, "favorites"), {
                     user_id: currentUser.uid,
                     job_id: jobId,
                     created_at: new Date()
                 });
+                console.log(`Добавлено в Firebase: ${jobId}`);
             }
         }
         
-        favorites = merged;
-        localStorage.setItem("favorites", JSON.stringify(favorites));
+        favorites = [...localFavorites];
         
         console.log("Избранное синхронизировано:", favorites.length);
         
@@ -942,8 +959,6 @@ window.viewItemDetails = function(itemId) {
     window.location.href = `item-detail.html?id=${itemId}`;
 };
 
-// Замените функцию applyFilters на эту версию (находится примерно в строке 700-750)
-
 window.applyFilters = function() {
     const search = document.getElementById("searchInput")?.value.toLowerCase() || "";
     const salary = document.getElementById("salaryFilter")?.value || "";
@@ -994,28 +1009,48 @@ async function loadAllData() {
         internships = [];
         events = [];
 
+        // Собираем все company_id для пакетной загрузки
+        const companyIdsToLoad = new Set();
+        const allItems = [];
+
         for (const docSnap of querySnapshot.docs) {
             const item = { id: docSnap.id, ...docSnap.data() };
             
-            console.log(`Загружена вакансия: ${item.title}, статус модерации: ${item.moderation_status || "undefined"}, наличие карты: ${!!item.map}`);
-            
-            if (!isModerationApproved(item)) {
-                console.log(`  - Пропущена (не одобрена): ${item.title}`);
-                continue;
-            }
+            if (!isModerationApproved(item)) continue;
 
             if (item.company_id) {
-                try {
-                    const companyDoc = await getDoc(doc(db, "companies", item.company_id));
-                    if (companyDoc.exists()) {
-                        item.company_name = companyDoc.data().name;
-                        item.company_logo = companyDoc.data().logo_url || null;
-                    } else {
-                        item.company_name = "Организатор";
+                companyIdsToLoad.add(item.company_id);
+            }
+            allItems.push(item);
+        }
+
+        console.log(`Загружено ${allItems.length} записей, компаний для загрузки: ${companyIdsToLoad.size}`);
+
+        // ПАКЕТНАЯ ЗАГРУЗКА КОМПАНИЙ (оптимизация)
+        const batchSize = 20;
+        const companyIdsArray = [...companyIdsToLoad];
+        
+        for (let i = 0; i < companyIdsArray.length; i += batchSize) {
+            const batch = companyIdsArray.slice(i, i + batchSize);
+            await Promise.all(batch.map(async (companyId) => {
+                if (!companiesCache.has(companyId)) {
+                    try {
+                        const companyDoc = await getDoc(doc(db, "companies", companyId));
+                        const name = companyDoc.exists() ? companyDoc.data().name : "Организатор";
+                        companiesCache.set(companyId, name);
+                    } catch (e) {
+                        companiesCache.set(companyId, "Организатор");
                     }
-                } catch (e) {
-                    item.company_name = "Организатор";
                 }
+            }));
+        }
+
+        // Применяем названия компаний
+        for (const item of allItems) {
+            if (item.company_id) {
+                item.company_name = companiesCache.get(item.company_id) || "Организатор";
+            } else {
+                item.company_name = "Организатор";
             }
 
             if (item.type === "internship") {
@@ -1028,7 +1063,6 @@ async function loadAllData() {
         }
 
         console.log(`Загружено: вакансий ${jobs.length}, стажировок ${internships.length}, мероприятий ${events.length}`);
-        console.log(`Вакансии с картой: ${jobs.filter(j => j.map && j.map.latitude).length}`);
 
         initTagFilters([...jobs, ...internships, ...events]);
 
