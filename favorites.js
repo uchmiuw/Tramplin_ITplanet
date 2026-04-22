@@ -5,7 +5,6 @@ import {
     doc,
     getDoc
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
-
 import { 
     onAuthStateChanged,
     signOut
@@ -13,19 +12,9 @@ import {
 
 let currentUser = null;
 let favoriteJobs = [];
-let markers = [];
-let map = null;
 
 onAuthStateChanged(auth, async (user) => {
     currentUser = user;
-    
-    if (!map && document.getElementById("map")) {
-        map = L.map('map').setView([56.0153, 92.8932], 12);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
-            attribution: '© OpenStreetMap' 
-        }).addTo(map);
-    }
-    
     await loadFavorites();
 });
 
@@ -96,51 +85,6 @@ function formatDate(dateValue) {
     }
 }
 
-function renderMap(data) {
-    if (!map) {
-        console.log("Карта не инициализирована");
-        return;
-    }
-    
-    markers.forEach(m => {
-        try {
-            if (m && map.removeLayer) map.removeLayer(m);
-        } catch(e) {}
-    });
-    markers = [];
-
-    if (!data || data.length === 0) return;
-
-    data.forEach(job => {
-        if (job.map && job.map.latitude && job.map.longitude) {
-            const marker = L.marker([job.map.latitude, job.map.longitude]).addTo(map);
-
-            const formattedDate = formatDate(job.created_at);
-            const dateText = formattedDate ? `<br>Дата добавления: ${formattedDate}` : "";
-            
-            const popupContent = `
-                <b>${job.title || "Без названия"}</b><br>
-                ${job.company_name || "Компания"}<br>
-                Зарплата: ${job.salary ? job.salary.toLocaleString() : "—"} ₽<br>
-                Формат: ${job.format || "—"}${dateText}
-            `;
-            marker.bindPopup(popupContent);
-
-            marker.on("click", () => {
-                const card = document.getElementById("job-" + job.id);
-                if (card) {
-                    card.scrollIntoView({ behavior: "smooth", block: "center" });
-                    document.querySelectorAll(".card").forEach(c => c.classList.remove("active"));
-                    card.classList.add("active");
-                }
-            });
-
-            job.marker = marker;
-            markers.push(marker);
-        }
-    });
-}
-
 function renderList(data) {
     const list = document.getElementById("list");
     if (!list) return;
@@ -187,15 +131,6 @@ function renderList(data) {
             </div>
         `;
 
-        div.onclick = (e) => {
-            if (e.target.tagName === 'BUTTON') return;
-            if (job.marker) {
-                map.flyTo(job.marker.getLatLng(), 14);
-                document.querySelectorAll(".card").forEach(c => c.classList.remove("active"));
-                div.classList.add("active");
-            }
-        };
-
         list.appendChild(div);
     });
 }
@@ -208,13 +143,11 @@ async function loadFavorites() {
     const favoritesIds = JSON.parse(localStorage.getItem("favorites")) || [];
     
     if (favoritesIds.length === 0) {
-        renderMap([]);
         renderList([]);
         return;
     }
     
     try {
-        console.log("Загрузка избранных вакансий...");
         const querySnapshot = await getDocs(collection(db, "opportunity"));
         favoriteJobs = [];
 
@@ -240,7 +173,6 @@ async function loadFavorites() {
             return timestampB - timestampA;
         });
         
-        renderMap(favoriteJobs);
         renderList(favoriteJobs);
         
     } catch (error) {
@@ -258,9 +190,23 @@ window.removeFromFavorites = async function(event, jobId) {
     
     favoriteJobs = favoriteJobs.filter(job => job.id !== jobId);
     
-    renderMap(favoriteJobs);
     renderList(favoriteJobs);
+    
+    // Отправляем событие для синхронизации с другими вкладками
+    window.dispatchEvent(new StorageEvent('storage', {
+        key: 'favorites',
+        newValue: JSON.stringify(favorites),
+        oldValue: JSON.stringify([...favorites, jobId])
+    }));
+    
     alert("Вакансия удалена из избранного");
 };
+
+// Слушаем изменения в localStorage из других вкладок
+window.addEventListener('storage', function(e) {
+    if (e.key === 'favorites') {
+        loadFavorites();
+    }
+});
 
 export { loadFavorites };
