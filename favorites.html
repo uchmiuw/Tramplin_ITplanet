@@ -5,24 +5,654 @@
   <title>Избранное - Трамплин</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* Специальные стили для страницы избранного */
+    body {
+      background: #f5f7fb;
+      overflow: auto;
+      height: auto;
+    }
+    
+    .favorites-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
+    
+    .favorites-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .favorites-header h2 {
+      color: #1f6aa5;
+      font-size: 28px;
+      margin: 0 0 10px 0;
+    }
+    
+    .favorites-header p {
+      color: #6c757d;
+      font-size: 14px;
+    }
+    
+    .favorites-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .favorite-card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      transition: all 0.2s ease;
+      border: 1px solid #e9ecef;
+      position: relative;
+    }
+    
+    .favorite-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    }
+    
+    .favorite-remove {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #dc3545;
+      transition: all 0.2s;
+      padding: 4px 8px;
+      border-radius: 8px;
+    }
+    
+    .favorite-remove:hover {
+      background: #fee;
+      transform: scale(1.1);
+    }
+    
+    .favorite-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1f6aa5;
+      margin: 0 0 8px 0;
+      padding-right: 40px;
+    }
+    
+    .favorite-company {
+      color: #6c757d;
+      font-size: 14px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      display: inline-block;
+    }
+    
+    .favorite-company:hover {
+      color: #1f6aa5;
+      text-decoration: underline;
+    }
+    
+    .favorite-details {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin: 12px 0;
+      font-size: 14px;
+      color: #495057;
+    }
+    
+    .favorite-details span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .favorite-address {
+      color: #6c757d;
+      font-size: 13px;
+      margin: 8px 0;
+    }
+    
+    .favorite-description {
+      font-size: 13px;
+      color: #6c757d;
+      margin: 10px 0;
+      line-height: 1.5;
+    }
+    
+    .favorite-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0;
+    }
+    
+    .tag-pill {
+      background: #eef6fb;
+      color: #1f6aa5;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+    }
+    
+    .favorite-date {
+      font-size: 11px;
+      color: #adb5bd;
+      margin-top: 12px;
+    }
+    
+    .favorite-actions {
+      margin-top: 16px;
+      display: flex;
+      gap: 12px;
+    }
+    
+    .btn-view {
+      background: #1f6aa5;
+      color: white;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    
+    .btn-view:hover {
+      background: #155a8a;
+      transform: translateY(-1px);
+    }
+    
+    .empty-favorites {
+      text-align: center;
+      padding: 60px 20px;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    
+    .empty-favorites h3 {
+      color: #1f6aa5;
+      margin-bottom: 15px;
+    }
+    
+    .empty-favorites p {
+      color: #6c757d;
+      margin-bottom: 25px;
+    }
+    
+    .btn-primary {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    
+    .btn-primary:hover {
+      background: #218838;
+    }
+    
+    @media (max-width: 768px) {
+      .favorites-container {
+        padding: 20px 16px;
+      }
+      
+      .favorite-title {
+        font-size: 18px;
+      }
+      
+      .favorite-details {
+        flex-direction: column;
+        gap: 8px;
+      }
+      
+      .favorite-actions {
+        flex-direction: column;
+      }
+      
+      .btn-view {
+        width: 100%;
+        text-align: center;
+      }
+    }
+  </style>
 </head>
 <body>
 
 <header class="header">
-  <h1>Избранные вакансии</h1>
+  <h1>Трамплин</h1>
   <div class="auth-buttons">
     <button onclick="window.location.href='index.html'">На главную</button>
     <button onclick="logout()">Выйти</button>
   </div>
 </header>
 
-<main class="main-layout">
-  <div class="list-container">
-    <h2>Мои избранные вакансии</h2>
-    <div id="list"></div>
+<main class="favorites-container">
+  <div class="favorites-header">
+    <h2>Избранное</h2>
+    <p>Ваши сохраненные вакансии, стажировки и мероприятия</p>
+  </div>
+  
+  <div id="favoritesList" class="favorites-list">
+    <!-- Список избранного будет загружаться сюда -->
+    <div class="empty-favorites">
+      <h3>Пока ничего нет</h3>
+      <p>Добавляйте вакансии, стажировки и мероприятия в избранное,<br>чтобы не потерять интересные варианты</p>
+      <button class="btn-primary" onclick="window.location.href='index.html'">Перейти к поиску</button>
+    </div>
   </div>
 </main>
 
-<script type="module" src="favorites.js"></script>
+<script type="module">
+import { db, auth } from "./firebase.js";
+import { 
+    collection, 
+    getDocs, 
+    doc,
+    getDoc
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { 
+    onAuthStateChanged,
+    signOut
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+
+let currentUser = null;
+let favoriteJobs = [];
+
+function escapeHtml(text) {
+    if (!text) return "";
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function formatDate(dateValue) {
+    if (!dateValue) return null;
+    
+    try {
+        let date;
+        
+        if (typeof dateValue === 'object' && dateValue !== null && 'seconds' in dateValue) {
+            date = new Date(dateValue.seconds * 1000);
+        }
+        else if (typeof dateValue === 'string') {
+            date = new Date(dateValue);
+        }
+        else if (dateValue instanceof Date) {
+            date = dateValue;
+        }
+        else if (typeof dateValue === 'number') {
+            date = new Date(dateValue);
+        }
+        else {
+            return null;
+        }
+        
+        if (isNaN(date.getTime())) {
+            return null;
+        }
+        
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        
+        return `${day}.${month}.${year}`;
+    } catch (e) {
+        return null;
+    }
+}
+
+function getTypeText(type) {
+    if (type === "internship") return "Стажировка";
+    if (type === "event") return "Мероприятие";
+    return "Вакансия";
+}
+
+function splitOpportunityTags(item) {
+    const tags = Array.isArray(item?.tags) ? item.tags : [];
+    const techTags = [];
+    const levels = [];
+    const hours = [];
+
+    const normalizeTagForCompare = (tag) => (tag ?? "").toString().trim().toLowerCase();
+    
+    const mapLevelTag = (tag) => {
+        const t = normalizeTagForCompare(tag);
+        if (!t) return null;
+        if (t === "junior") return "Junior";
+        if (t === "middle") return "Middle";
+        if (t === "senior") return "Senior";
+        return null;
+    };
+    
+    const mapHoursTag = (tag) => {
+        const t = normalizeTagForCompare(tag);
+        if (!t) return null;
+        if (t.includes("3-6") || t === "3-6 часов" || t === "3-6") return "3-6 часов";
+        if (t.includes("7-9") || t === "7-9 часов" || t === "7-9") return "7-9 часов";
+        if (t.includes("10-14") || t === "10-14 часов" || t === "10-14") return "10-14 часов";
+        return null;
+    };
+
+    for (const rawTag of tags) {
+        const level = mapLevelTag(rawTag);
+        if (level) {
+            if (!levels.includes(level)) levels.push(level);
+            continue;
+        }
+        const hourRange = mapHoursTag(rawTag);
+        if (hourRange) {
+            if (!hours.includes(hourRange)) hours.push(hourRange);
+            continue;
+        }
+        if (rawTag && !techTags.includes(rawTag)) techTags.push(rawTag);
+    }
+
+    return { techTags, levels, hours };
+}
+
+window.showCompanyInfo = async function(companyId) {
+    if (!companyId) {
+        alert("Информация о компании не найдена");
+        return;
+    }
+    
+    try {
+        const companyDoc = await getDoc(doc(db, "companies", companyId));
+        if (!companyDoc.exists()) {
+            alert("Информация о компании не найдена");
+            return;
+        }
+        
+        const company = companyDoc.data();
+        
+        const userDoc = await getDoc(doc(db, "users", companyId));
+        const userData = userDoc.exists() ? userDoc.data() : {};
+        
+        const jobsSnap = await getDocs(
+            query(collection(db, "opportunity"), where("company_id", "==", companyId))
+        );
+        const jobsCount = jobsSnap.size;
+        
+        const foundedYear = company.founded_year || "Не указан";
+        const employeeCount = company.employee_count || "Не указано";
+        const officeLocations = company.office_locations || "Не указано";
+        
+        const existingModal = document.getElementById("companyInfoModal");
+        if (existingModal) existingModal.remove();
+        
+        const modal = document.createElement("div");
+        modal.id = "companyInfoModal";
+        modal.style.position = "fixed";
+        modal.style.top = "0";
+        modal.style.left = "0";
+        modal.style.width = "100%";
+        modal.style.height = "100%";
+        modal.style.backgroundColor = "rgba(0,0,0,0.5)";
+        modal.style.display = "flex";
+        modal.style.alignItems = "center";
+        modal.style.justifyContent = "center";
+        modal.style.zIndex = "10000";
+        
+        let logoHtml = "";
+        if (company.logo_url && company.logo_url !== 'null' && company.logo_url !== 'undefined') {
+            logoHtml = `<img src="${company.logo_url}" alt="Логотип компании" style="width: 80px; height: 80px; object-fit: cover; border-radius: 12px; margin-right: 20px;">`;
+        } else {
+            logoHtml = `<div style="width: 80px; height: 80px; background: #f0f2f5; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 20px; font-size: 32px; color: #999;">🏢</div>`;
+        }
+        
+        let videoHtml = "";
+        if (company.video_url) {
+            let embedUrl = company.video_url;
+            if (company.video_url.includes("youtube.com/watch?v=")) {
+                const videoId = company.video_url.split("v=")[1].split("&")[0];
+                embedUrl = `https://www.youtube.com/embed/${videoId}`;
+            } else if (company.video_url.includes("youtu.be/")) {
+                const videoId = company.video_url.split("youtu.be/")[1].split("?")[0];
+                embedUrl = `https://www.youtube.com/embed/${videoId}`;
+            }
+            videoHtml = `
+                <div style="margin-top: 20px;">
+                    <h4 style="color: #1f6aa5; margin-bottom: 10px;">Видео-презентация</h4>
+                    <iframe src="${embedUrl}" frameborder="0" allowfullscreen style="width: 100%; height: 315px; border-radius: 12px;"></iframe>
+                </div>
+            `;
+        }
+        
+        modal.innerHTML = `
+            <div style="background: white; border-radius: 24px; max-width: 550px; width: 90%; max-height: 85vh; overflow-y: auto; position: relative;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #e9ecef;">
+                    <h2 style="margin: 0; color: #1f6aa5;">О компании</h2>
+                    <button onclick="closeCompanyInfoModal()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #666;">&times;</button>
+                </div>
+                <div style="padding: 24px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                        ${logoHtml}
+                        <div>
+                            <h3 style="margin: 0 0 5px 0; font-size: 22px;">${escapeHtml(company.name || "Без названия")}</h3>
+                            <p style="margin: 0; color: #666;">${escapeHtml(company.field || "Сфера деятельности не указана")}</p>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+                        <p style="margin: 0 0 8px 0;"><strong>Описание:</strong> ${escapeHtml(company.description || "Описание отсутствует")}</p>
+                        ${company.site ? `<p style="margin: 0 0 8px 0;"><strong>Сайт:</strong> <a href="${company.site}" target="_blank" style="color: #1f6aa5;">${company.site}</a></p>` : ""}
+                        ${company.social ? `<p style="margin: 0 0 8px 0;"><strong>Соцсети:</strong> ${escapeHtml(company.social)}</p>` : ""}
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                        <div style="background: #f8f9fa; border-radius: 12px; padding: 12px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: #1f6aa5;">${employeeCount}</div>
+                            <div style="font-size: 12px; color: #666;">Сотрудников</div>
+                        </div>
+                        <div style="background: #f8f9fa; border-radius: 12px; padding: 12px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: #1f6aa5;">${foundedYear}</div>
+                            <div style="font-size: 12px; color: #666;">Год основания</div>
+                        </div>
+                        <div style="background: #f8f9fa; border-radius: 12px; padding: 12px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: #1f6aa5;">${officeLocations}</div>
+                            <div style="font-size: 12px; color: #666;">Офисов</div>
+                        </div>
+                        <div style="background: #f8f9fa; border-radius: 12px; padding: 12px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: #1f6aa5;">${jobsCount}</div>
+                            <div style="font-size: 12px; color: #666;">Вакансий</div>
+                        </div>
+                    </div>
+                    
+                    ${videoHtml}
+                </div>
+            </div>
+        `;
+        
+        modal.addEventListener("click", function(e) {
+            if (e.target === modal) {
+                closeCompanyInfoModal();
+            }
+        });
+        
+        document.body.appendChild(modal);
+        
+    } catch (error) {
+        console.error("Ошибка загрузки информации о компании:", error);
+        alert("Ошибка при загрузке информации о компании");
+    }
+};
+
+window.closeCompanyInfoModal = function() {
+    const modal = document.getElementById("companyInfoModal");
+    if (modal) modal.remove();
+};
+
+function renderFavorites(data) {
+    const container = document.getElementById("favoritesList");
+    if (!container) return;
+
+    if (!data || data.length === 0) {
+        container.innerHTML = `
+            <div class="empty-favorites">
+                <h3>Пока ничего нет</h3>
+                <p>Добавляйте вакансии, стажировки и мероприятия в избранное,<br>чтобы не потерять интересные варианты</p>
+                <button class="btn-primary" onclick="window.location.href='index.html'">Перейти к поиску</button>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = "";
+
+    data.forEach(job => {
+        const formattedDate = formatDate(job.created_at);
+        const dateText = formattedDate ? `Добавлено: ${formattedDate}` : "";
+        
+        let addressText = "";
+        if (job.formatted_address) {
+            addressText = job.formatted_address;
+        } else if (job.city) {
+            addressText = job.city;
+            if (job.street) addressText += `, ${job.street}`;
+            if (job.house) addressText += `, ${job.house}`;
+        } else {
+            addressText = "Адрес не указан";
+        }
+
+        const typeText = getTypeText(job.type);
+        
+        const { techTags, levels, hours } = splitOpportunityTags(job);
+        const allTags = [...techTags.slice(0, 5), ...levels.slice(0, 1), ...hours.slice(0, 1)];
+        const tagsHtml = allTags.length > 0 ? `
+            <div class="favorite-tags">
+                ${allTags.map(t => `<span class="tag-pill">${escapeHtml(t)}</span>`).join("")}
+            </div>
+        ` : "";
+
+        const div = document.createElement("div");
+        div.className = "favorite-card";
+
+        div.innerHTML = `
+            <button class="favorite-remove" onclick="removeFromFavorites('${job.id}')" title="Удалить из избранного">❤️</button>
+            <h3 class="favorite-title">${escapeHtml(job.title || "Без названия")}</h3>
+            <div class="favorite-company" onclick="showCompanyInfo('${job.company_id}')">
+                ${escapeHtml(job.company_name || "Организатор")}
+            </div>
+            <div class="favorite-details">
+                <span>${typeText}</span>
+                ${job.salary ? `<span>${job.salary.toLocaleString()} ₽</span>` : ""}
+                <span>${escapeHtml(job.format || "Формат не указан")}</span>
+                ${job.work_hours ? `<span>${job.work_hours} ч/день</span>` : ""}
+                ${job.level ? `<span>${escapeHtml(job.level)}</span>` : ""}
+            </div>
+            <div class="favorite-address">${escapeHtml(addressText)}</div>
+            ${job.description ? `<div class="favorite-description">${escapeHtml(job.description.substring(0, 150))}${job.description.length > 150 ? "..." : ""}</div>` : ""}
+            ${tagsHtml}
+            <div class="favorite-date">${dateText}</div>
+            <div class="favorite-actions">
+                <button class="btn-view" onclick="viewJobDetails('${job.id}')">Подробнее</button>
+            </div>
+        `;
+
+        container.appendChild(div);
+    });
+}
+
+window.viewJobDetails = function(jobId) {
+    window.location.href = `item-detail.html?id=${jobId}`;
+};
+
+async function loadFavorites() {
+    const favoritesIds = JSON.parse(localStorage.getItem("favorites")) || [];
+    
+    if (favoritesIds.length === 0) {
+        renderFavorites([]);
+        return;
+    }
+    
+    try {
+        const querySnapshot = await getDocs(collection(db, "opportunity"));
+        favoriteJobs = [];
+
+        for (const docSnap of querySnapshot.docs) {
+            const job = { id: docSnap.id, ...docSnap.data() };
+            
+            if (favoritesIds.includes(job.id)) {
+                if (job.company_id) {
+                    try {
+                        const companyDoc = await getDoc(doc(db, "companies", job.company_id));
+                        if (companyDoc.exists()) {
+                            job.company_name = companyDoc.data().name;
+                        } else {
+                            job.company_name = "Организатор";
+                        }
+                    } catch(e) {
+                        job.company_name = "Организатор";
+                    }
+                }
+                favoriteJobs.push(job);
+            }
+        }
+        
+        favoriteJobs.sort((a, b) => {
+            const getTimestamp = (dateValue) => {
+                if (!dateValue) return 0;
+                if (typeof dateValue === 'object' && dateValue !== null && 'seconds' in dateValue) {
+                    return dateValue.seconds * 1000;
+                }
+                return new Date(dateValue).getTime() || 0;
+            };
+            const timestampA = getTimestamp(a.created_at);
+            const timestampB = getTimestamp(b.created_at);
+            return timestampB - timestampA;
+        });
+        
+        renderFavorites(favoriteJobs);
+        
+    } catch (error) {
+        console.error("Ошибка загрузки избранных:", error);
+        renderFavorites([]);
+    }
+}
+
+window.removeFromFavorites = async function(jobId) {
+    let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+    favorites = favorites.filter(f => f !== jobId);
+    localStorage.setItem("favorites", JSON.stringify(favorites));
+    
+    favoriteJobs = favoriteJobs.filter(job => job.id !== jobId);
+    
+    renderFavorites(favoriteJobs);
+    
+    window.dispatchEvent(new StorageEvent('storage', {
+        key: 'favorites',
+        newValue: JSON.stringify(favorites),
+        oldValue: JSON.stringify([...favorites, jobId])
+    }));
+    
+    alert("Вакансия удалена из избранного");
+};
+
+window.logout = async function() {
+    await signOut(auth);
+    window.location.href = "index.html";
+};
+
+onAuthStateChanged(auth, async (user) => {
+    currentUser = user;
+    await loadFavorites();
+});
+
+window.addEventListener('storage', function(e) {
+    if (e.key === 'favorites') {
+        loadFavorites();
+    }
+});
+</script>
+
 </body>
 </html>
