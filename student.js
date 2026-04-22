@@ -356,7 +356,7 @@ async function loadContacts() {
   contacts = [];
   
   if (contactsSnap.empty) {
-    container.innerHTML = '<div class="empty-state">У вас пока нет контактов. Найдите студентов в разделе поиска и добавьте их в друзья.</div>';
+    container.innerHTML = '<div class="empty-state">У вас пока нет контактов. Найдите студентов в разделе поиска и добавьте их в контакты.</div>';
     return;
   }
   
@@ -443,7 +443,7 @@ function updateSidebarRequests() {
     div.innerHTML = `
       <div class="contact-info">
         <h4>${escapeHtml(request.from_user_name)}</h4>
-        <p>Хочет добавить вас в друзья</p>
+        <p>Хочет добавить вас в контакты</p>
         <p style="font-size: 11px; color: #999;">${request.created_at ? new Date(request.created_at.seconds * 1000).toLocaleDateString('ru-RU') : "—"}</p>
       </div>
       <div style="display: flex; gap: 8px; margin-top: 10px;">
@@ -456,10 +456,10 @@ function updateSidebarRequests() {
 }
 
 window.addContact = async function(contactId) {
-  console.log(`[DEBUG] Попытка добавить в друзья: ${contactId}`);
+  console.log(`[DEBUG] Попытка добавить в контакты: ${contactId}`);
   
   if (contactId === currentUser?.uid) {
-    showToast("Вы не можете добавить себя в друзья", "info");
+    showToast("Вы не можете добавить себя в контакты", "info");
     return;
   }
 
@@ -498,7 +498,7 @@ window.addContact = async function(contactId) {
       status: "pending"
     });
     
-    showToast("Заявка в друзья отправлена", "success");
+    showToast("Заявка в контакты отправлена", "success");
     
     updateSearchResultButton(contactId, false, true);
     await loadSuggestedStudents();
@@ -514,7 +514,7 @@ function updateSearchResultButton(contactId, isContact = false, requestSent = fa
   
   buttons.forEach(btn => {
     if (isContact) {
-      btn.textContent = "Уже в друзьях";
+      btn.textContent = "Уже в контактах";
       btn.disabled = true;
       btn.style.background = "#6c757d";
     } else if (requestSent) {
@@ -522,7 +522,7 @@ function updateSearchResultButton(contactId, isContact = false, requestSent = fa
       btn.disabled = true;
       btn.style.background = "#6c757d";
     } else {
-      btn.textContent = "Добавить в друзья";
+      btn.textContent = "Добавить в контакты";
       btn.disabled = false;
       btn.style.background = "#28a745";
     }
@@ -576,7 +576,7 @@ window.declineFriendRequest = async function(requestId) {
 };
 
 window.removeContact = async function(contactId) {
-  if (!confirm("Удалить пользователя из друзей?")) return;
+  if (!confirm("Удалить пользователя из контактов?")) return;
   
   try {
     const contactUserDoc = await getDoc(doc(db, "users", contactId));
@@ -614,7 +614,7 @@ window.removeContact = async function(contactId) {
     
     await Promise.all(deletePromises);
     
-    showToast(`Контакт "${contactName}" удален из друзей`, "success");
+    showToast(`Контакт "${contactName}" удален из контактов`, "success");
     
     await loadContacts();
     await loadSuggestedStudents();
@@ -643,7 +643,7 @@ window.removeContact = async function(contactId) {
         snap1.forEach(docSnap => deletePromises.push(deleteDoc(docSnap.ref)));
         await Promise.all(deletePromises);
         
-        showToast(`Контакт удален из вашего списка друзей`, "success");
+        showToast(`Контакт удален из вашего списка контактов`, "success");
         
         await loadContacts();
         await loadSuggestedStudents();
@@ -658,7 +658,7 @@ window.removeContact = async function(contactId) {
         showToast("Не удалось удалить контакт", "error");
       }
     } else {
-      showToast("Ошибка при удалении из друзей", "error");
+      showToast("Ошибка при удалении из контактов", "error");
     }
   }
 };
@@ -741,7 +741,7 @@ async function loadSuggestedStudents() {
         </div>
         <div>
           <button onclick="addContact('${c.id}')" style="background: #28a745; padding: 8px 12px; font-size: 12px; border-radius: 10px; border: none; cursor: pointer;">
-            Добавить в друзья
+            Добавить в контакты
           </button>
         </div>
       </div>
@@ -850,11 +850,11 @@ async function searchStudents(searchText) {
       
       let buttonHtml = "";
       if (user.isContact) {
-        buttonHtml = `<button disabled style="background: #6c757d;">Уже в друзьях</button>`;
+        buttonHtml = `<button disabled style="background: #6c757d;">Уже в контактах</button>`;
       } else if (user.requestSent) {
         buttonHtml = `<button disabled style="background: #6c757d;">Заявка отправлена</button>`;
       } else {
-        buttonHtml = `<button onclick="addContact('${user.id}')" style="background: #28a745;">Добавить в друзья</button>`;
+        buttonHtml = `<button onclick="addContact('${user.id}')" style="background: #28a745;">Добавить в контакты</button>`;
       }
       
       div.innerHTML = `
