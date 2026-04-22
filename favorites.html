@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
   <style>
-    /* Специальные стили для страницы избранного */
     body {
       background: #f5f7fb;
       overflow: auto;
@@ -200,6 +199,12 @@
       background: #218838;
     }
     
+    .loading-spinner {
+      text-align: center;
+      padding: 40px;
+      color: #1f6aa5;
+    }
+    
     @media (max-width: 768px) {
       .favorites-container {
         padding: 20px 16px;
@@ -242,12 +247,7 @@
   </div>
   
   <div id="favoritesList" class="favorites-list">
-    <!-- Список избранного будет загружаться сюда -->
-    <div class="empty-favorites">
-      <h3>Пока ничего нет</h3>
-      <p>Добавляйте вакансии, стажировки и мероприятия в избранное,<br>чтобы не потерять интересные варианты</p>
-      <button class="btn-primary" onclick="window.location.href='index.html'">Перейти к поиску</button>
-    </div>
+    <div class="loading-spinner">Загрузка избранного...</div>
   </div>
 </main>
 
@@ -266,6 +266,7 @@ import {
 
 let currentUser = null;
 let favoriteJobs = [];
+let companiesCache = new Map();
 
 function escapeHtml(text) {
     if (!text) return "";
@@ -276,34 +277,21 @@ function escapeHtml(text) {
 
 function formatDate(dateValue) {
     if (!dateValue) return null;
-    
     try {
         let date;
-        
         if (typeof dateValue === 'object' && dateValue !== null && 'seconds' in dateValue) {
             date = new Date(dateValue.seconds * 1000);
-        }
-        else if (typeof dateValue === 'string') {
+        } else if (typeof dateValue === 'string') {
             date = new Date(dateValue);
-        }
-        else if (dateValue instanceof Date) {
+        } else if (dateValue instanceof Date) {
             date = dateValue;
-        }
-        else if (typeof dateValue === 'number') {
-            date = new Date(dateValue);
-        }
-        else {
+        } else {
             return null;
         }
-        
-        if (isNaN(date.getTime())) {
-            return null;
-        }
-        
+        if (isNaN(date.getTime())) return null;
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const year = date.getFullYear();
-        
         return `${day}.${month}.${year}`;
     } catch (e) {
         return null;
@@ -357,6 +345,22 @@ function splitOpportunityTags(item) {
     }
 
     return { techTags, levels, hours };
+}
+
+// Пакетная загрузка компаний
+async function batchLoadCompanies(companyIds) {
+    const uniqueIds = [...new Set(companyIds.filter(id => id && !companiesCache.has(id)))];
+    if (uniqueIds.length === 0) return;
+    
+    await Promise.all(uniqueIds.map(async (id) => {
+        try {
+            const companyDoc = await getDoc(doc(db, "companies", id));
+            const name = companyDoc.exists() ? companyDoc.data().name : "Организатор";
+            companiesCache.set(id, name);
+        } catch (e) {
+            companiesCache.set(id, "Организатор");
+        }
+    }));
 }
 
 window.showCompanyInfo = async function(companyId) {
@@ -567,6 +571,11 @@ window.viewJobDetails = function(jobId) {
 };
 
 async function loadFavorites() {
+    const container = document.getElementById("favoritesList");
+    if (container) {
+        container.innerHTML = '<div class="loading-spinner">Загрузка избранного...</div>';
+    }
+    
     const favoritesIds = JSON.parse(localStorage.getItem("favorites")) || [];
     
     if (favoritesIds.length === 0) {
@@ -575,30 +584,43 @@ async function loadFavorites() {
     }
     
     try {
+        // Загружаем все вакансии одним запросом
         const querySnapshot = await getDocs(collection(db, "opportunity"));
-        favoriteJobs = [];
+        const matchedJobs = [];
+        const companyIds = new Set();
 
         for (const docSnap of querySnapshot.docs) {
             const job = { id: docSnap.id, ...docSnap.data() };
-            
             if (favoritesIds.includes(job.id)) {
-                if (job.company_id) {
-                    try {
-                        const companyDoc = await getDoc(doc(db, "companies", job.company_id));
-                        if (companyDoc.exists()) {
-                            job.company_name = companyDoc.data().name;
-                        } else {
-                            job.company_name = "Организатор";
-                        }
-                    } catch(e) {
-                        job.company_name = "Организатор";
-                    }
-                }
-                favoriteJobs.push(job);
+                matchedJobs.push(job);
+                if (job.company_id) companyIds.add(job.company_id);
             }
         }
         
-        favoriteJobs.sort((a, b) => {
+        // Пакетная загрузка компаний
+        await Promise.all([...companyIds].map(async (companyId) => {
+            if (!companiesCache.has(companyId)) {
+                try {
+                    const companyDoc = await getDoc(doc(db, "companies", companyId));
+                    const name = companyDoc.exists() ? companyDoc.data().name : "Организатор";
+                    companiesCache.set(companyId, name);
+                } catch(e) {
+                    companiesCache.set(companyId, "Организатор");
+                }
+            }
+        }));
+        
+        // Применяем названия компаний
+        for (const job of matchedJobs) {
+            if (job.company_id) {
+                job.company_name = companiesCache.get(job.company_id) || "Организатор";
+            } else {
+                job.company_name = "Организатор";
+            }
+        }
+        
+        // Сортировка по дате
+        matchedJobs.sort((a, b) => {
             const getTimestamp = (dateValue) => {
                 if (!dateValue) return 0;
                 if (typeof dateValue === 'object' && dateValue !== null && 'seconds' in dateValue) {
@@ -606,11 +628,10 @@ async function loadFavorites() {
                 }
                 return new Date(dateValue).getTime() || 0;
             };
-            const timestampA = getTimestamp(a.created_at);
-            const timestampB = getTimestamp(b.created_at);
-            return timestampB - timestampA;
+            return getTimestamp(b.created_at) - getTimestamp(a.created_at);
         });
         
+        favoriteJobs = matchedJobs;
         renderFavorites(favoriteJobs);
         
     } catch (error) {
@@ -628,13 +649,13 @@ window.removeFromFavorites = async function(jobId) {
     
     renderFavorites(favoriteJobs);
     
+    // Обновляем другие вкладки
     window.dispatchEvent(new StorageEvent('storage', {
         key: 'favorites',
-        newValue: JSON.stringify(favorites),
-        oldValue: JSON.stringify([...favorites, jobId])
+        newValue: JSON.stringify(favorites)
     }));
     
-    alert("Вакансия удалена из избранного");
+    alert("Удалено из избранного");
 };
 
 window.logout = async function() {
