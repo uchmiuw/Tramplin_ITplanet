@@ -1,5 +1,10 @@
 import { auth, db } from "./firebase.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { 
+    onAuthStateChanged,
+    EmailAuthProvider,
+    reauthenticateWithCredential,
+    deleteUser
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import { 
   collection, 
   getDocs, 
@@ -10,10 +15,8 @@ import {
   updateDoc, 
   addDoc, 
   deleteDoc,
-  writeBatch,
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
-
 let currentUser = null;
 let currentUserData = null;
 let contacts = [];
@@ -1210,6 +1213,70 @@ window.markRecommendationRead = async function(recId) {
     console.error("Ошибка отметки рекомендации:", error);
     showToast("Ошибка при отметке рекомендации", "error");
   }
+};
+
+window.deleteAccount = async function() {
+    // Запрашиваем пароль для повторной аутентификации
+    const password = prompt("Для удаления аккаунта введите ваш пароль для подтверждения:");
+    if (!password) return;
+    
+    if (!confirm("ВНИМАНИЕ! Удаление аккаунта приведет к безвозвратной потере доступа к платформе. Вы уверены?")) {
+        return;
+    }
+    
+    if (!confirm("ПОСЛЕДНЕЕ ПРЕДУПРЕЖДЕНИЕ! Это действие НЕЛЬЗЯ отменить. Продолжить?")) {
+        return;
+    }
+    
+    try {
+        showToast("Удаление аккаунта...", "info");
+        
+        // 1. Повторная аутентификация
+        const credential = EmailAuthProvider.credential(currentUser.email, password);
+        await reauthenticateWithCredential(currentUser, credential);
+        
+        const userId = currentUser.uid;
+        
+        // 2. Пытаемся удалить данные пользователя из Firestore
+        try {
+            await deleteDoc(doc(db, "users", userId));
+            console.log("Запись пользователя удалена из Firestore");
+        } catch (e) {
+            console.log("Не удалось удалить запись пользователя из Firestore:", e);
+        }
+        
+        // 3. Удаляем аккаунт из Authentication
+        await deleteUser(currentUser);
+        
+        // 4. Очищаем localStorage
+        localStorage.clear();
+        
+        // 5. Отключаем слушатель
+        if (applicationsListener) {
+            applicationsListener();
+        }
+        
+        alert("Аккаунт успешно удален");
+        window.location.href = "index.html";
+        
+    } catch (error) {
+        console.error("Ошибка удаления аккаунта:", error);
+        
+        if (error.code === 'auth/wrong-password') {
+            alert("Неверный пароль. Попробуйте снова.");
+        } else if (error.code === 'auth/requires-recent-login') {
+            alert("Для удаления аккаунта требуется повторный вход. Сейчас вы будете перенаправлены на страницу входа.");
+            setTimeout(() => {
+                auth.signOut().then(() => {
+                    window.location.href = "login.html";
+                });
+            }, 2000);
+        } else if (error.code === 'permission-denied') {
+            alert("У вас нет прав на удаление аккаунта. Обратитесь к администратору.");
+        } else {
+            alert("Ошибка при удалении: " + error.message);
+        }
+    }
 };
 
 const style = document.createElement("style");

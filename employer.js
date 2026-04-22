@@ -1,4 +1,10 @@
 import { auth, db } from "./firebase.js";
+import { 
+    onAuthStateChanged,
+    EmailAuthProvider,
+    reauthenticateWithCredential,
+    deleteUser
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import {
   addDoc,
   collection,
@@ -11,8 +17,6 @@ import {
   deleteDoc,
   setDoc
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
-
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
 let currentUser = null;
 let editingJobId = null;
@@ -1610,3 +1614,80 @@ document.addEventListener('DOMContentLoaded', function() {
         verificationForm.addEventListener('submit', window.submitVerificationRequest);
     }
 });
+
+window.deleteAccount = async function() {
+    const password = prompt("Для удаления аккаунта введите ваш пароль для подтверждения:");
+    if (!password) return;
+    
+    if (!confirm("ВНИМАНИЕ! Удаление аккаунта приведет к безвозвратной потере:\n- Информации о компании\n- Всех опубликованных вакансий\n- Всех откликов на вакансии\n\nВы уверены?")) {
+        return;
+    }
+    
+    if (!confirm("ПОСЛЕДНЕЕ ПРЕДУПРЕЖДЕНИЕ! Продолжить?")) {
+        return;
+    }
+    
+    try {
+        showToast("Удаление аккаунта...", "info");
+        
+        const credential = EmailAuthProvider.credential(currentUser.email, password);
+        await reauthenticateWithCredential(currentUser, credential);
+        
+        const userId = currentUser.uid;
+        const deletePromises = [];
+        
+        const jobsSnap = await getDocs(
+            query(collection(db, "opportunity"), where("company_id", "==", userId))
+        );
+        jobsSnap.forEach(doc => deletePromises.push(deleteDoc(doc.ref)));
+        
+        const appsSnap = await getDocs(collection(db, "applications"));
+        for (const appDoc of appsSnap.docs) {
+            const app = appDoc.data();
+            const jobDoc = await getDoc(doc(db, "opportunity", app.opportunity_id));
+            if (jobDoc.exists() && jobDoc.data().company_id === userId) {
+                deletePromises.push(deleteDoc(appDoc.ref));
+            }
+        }
+        
+        deletePromises.push(deleteDoc(doc(db, "companies", userId)));
+        
+        deletePromises.push(deleteDoc(doc(db, "users", userId)));
+        
+        await Promise.all(deletePromises);
+        
+        await deleteUser(currentUser);
+        
+        localStorage.clear();
+        
+        showToast("Аккаунт успешно удален", "success");
+        
+        setTimeout(() => {
+            window.location.href = "index.html";
+        }, 2000);
+        
+    } catch (error) {
+        console.error("Ошибка удаления:", error);
+        if (error.code === 'auth/wrong-password') {
+            showToast("Неверный пароль", "error");
+        } else {
+            showToast("Ошибка: " + error.message, "error");
+        }
+    }
+};
+
+function showToast(message, type = "info") {
+    const toast = document.createElement("div");
+    toast.style.position = "fixed";
+    toast.style.bottom = "20px";
+    toast.style.right = "20px";
+    toast.style.padding = "12px 20px";
+    toast.style.borderRadius = "8px";
+    toast.style.backgroundColor = type === "success" ? "#28a745" : type === "error" ? "#dc3545" : "#1f6aa5";
+    toast.style.color = "white";
+    toast.style.zIndex = "9999";
+    toast.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}

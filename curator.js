@@ -1,5 +1,12 @@
 import { db, auth } from "./firebase.js";
 import { 
+    onAuthStateChanged,
+    createUserWithEmailAndPassword,
+    EmailAuthProvider,
+    reauthenticateWithCredential,
+    deleteUser
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { 
     collection, 
     getDocs, 
     doc, 
@@ -1529,3 +1536,48 @@ window.closeEditCompanyModal = function() {
 
 window.saveEditedUser = saveEditedUser;
 window.saveEditedCompany = saveEditedCompany;
+
+window.deleteAccount = async function() {
+    const password = prompt("Для удаления аккаунта введите ваш пароль для подтверждения:");
+    if (!password) return;
+    
+    if (!confirm("ВНИМАНИЕ! Удаление аккаунта куратора приведет к безвозвратной потере данных. Вы уверены?")) {
+        return;
+    }
+    
+    if (!confirm("ПОСЛЕДНЕЕ ПРЕДУПРЕЖДЕНИЕ! Продолжить?")) {
+        return;
+    }
+    
+    try {
+        const credential = EmailAuthProvider.credential(currentUser.email, password);
+        await reauthenticateWithCredential(currentUser, credential);
+        
+        const curatorsSnap = await getDocs(
+            query(collection(db, "users"), where("role", "==", "curator"))
+        );
+        
+        if (curatorsSnap.size === 1) {
+            if (!confirm("ВНИМАНИЕ! Вы последний куратор в системе. После удаления некому будет модерировать контент. Все равно удалить?")) {
+                return;
+            }
+        }
+        
+        await deleteDoc(doc(db, "users", currentUser.uid));
+        
+        await deleteUser(currentUser);
+        
+        localStorage.clear();
+        
+        alert("Аккаунт успешно удален");
+        window.location.href = "index.html";
+        
+    } catch (error) {
+        console.error("Ошибка:", error);
+        if (error.code === 'auth/wrong-password') {
+            alert("Неверный пароль");
+        } else {
+            alert("Ошибка: " + error.message);
+        }
+    }
+};
