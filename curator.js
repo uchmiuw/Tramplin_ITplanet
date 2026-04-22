@@ -18,10 +18,6 @@ import {
     setDoc,
     addDoc
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
-import { 
-    onAuthStateChanged,
-    createUserWithEmailAndPassword
-} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
 let currentUser = null;
 let allCompanies = [];

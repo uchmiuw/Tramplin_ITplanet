@@ -90,7 +90,7 @@ function splitOpportunityTags(item) {
 }
 
 function isModerationApproved(item) {
-    return true;
+    return !item?.moderation_status || item.moderation_status === "approved";
 }
 
 function ensureHoverCardElement() {
